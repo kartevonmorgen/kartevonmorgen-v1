@@ -1,4 +1,4 @@
-import { FC, useState } from 'react'
+import React, { FC, useEffect, useState } from 'react'
 import { NextRouter, useRouter } from 'next/router'
 import useTranslation from 'next-translate/useTranslation'
 import { Select } from 'antd'
@@ -6,6 +6,7 @@ import debounce from 'lodash/debounce'
 import useRequest from '../api/useRequest'
 import { GeoLocations } from '../dtos/GeoLocatoinResponse'
 import API_ENDPOINTS from '../api/endpoints/'
+import ShowMapButton from './ShowMapButton'
 
 
 const { Option } = Select
@@ -28,6 +29,9 @@ const onSelect = (router: NextRouter) => (value: string) => {
   )
 }
 
+const showMapByClickOnButton = (router: NextRouter) => () => {
+  router.push('/maps/main')
+}
 
 const HomeCitySearch: FC = () => {
   const router = useRouter()
@@ -43,6 +47,16 @@ const HomeCitySearch: FC = () => {
     },
   })
 
+  const [showMapButton, setShowMapButton] = useState<boolean>(false)
+
+  useEffect(() => {
+    if (searchTerm.length > 0 && geoLocations?.length === 0) {
+      setShowMapButton(true)
+    }
+    if (searchTerm.length === 0 || geoLocations?.length > 0) {
+      setShowMapButton(false)
+    }
+  }, [geoLocations])
 
   return (
     <div
@@ -62,7 +76,7 @@ const HomeCitySearch: FC = () => {
         onSelect={onSelect(router)}
         onSearch={debounce(setSearchTerm, 400)}
         placeholder={t('landingPage.city-search.placeholder')}
-        size="large"
+        size='large'
       >
         {
           geoLocations && !geoLocationError && (
@@ -78,6 +92,11 @@ const HomeCitySearch: FC = () => {
         }
       </Select>
 
+      <div>
+        {
+          showMapButton && <ShowMapButton showMapByClickOnButton={showMapByClickOnButton(router)} />
+        }
+      </div>
     </div>
   )
 }
