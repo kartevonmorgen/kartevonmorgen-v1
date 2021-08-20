@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import React, { FC, useState } from 'react'
 import { NextRouter, useRouter } from 'next/router'
 import { useSelector } from 'react-redux'
 import produce from 'immer'
@@ -20,6 +20,9 @@ import AddEntryButton from './AddEntryButton'
 import BurgerMenu from './BurgerMenu'
 import MapQueryParamsListener from './MapQueryParamsListener'
 import LocateMe from './LocateMe'
+import ShareEntryButton from './ShareEntryButton'
+import { MapModalMode, MapShareModal } from './MapShareModal'
+import { MapCustomClassZoomControl } from './MapCustomClassZoomController'
 
 
 const icons = {
@@ -111,6 +114,17 @@ const Map: FC = () => {
     (state: RootState) => searchResultSelector(state),
   )
 
+  // for only one create class for ZoomController otherwise, a lot of div's were created 0_0
+  const [createClass,setCreateClass] = useState<boolean>(false)
+
+  // trigger for drop-down button "Share"
+  const [showButtons, setShowButtons] = useState<boolean>(false)
+
+  // triggers for modals
+  const [isModalVisibleEmbed, setIsModalVisibleEmbed] = useState<boolean>(false)
+  const [isModalVisibleSubscribe, setIsModalVisibleSubscribe] = useState<boolean>(false)
+
+
   return (
     <MapContainer
       center={[50.826, 10.92]}
@@ -120,26 +134,36 @@ const Map: FC = () => {
       zoomControl={false}
     >
 
-      <MapLocationInitializer/>
+      <MapLocationInitializer />
 
-      <MapEventsListener/>
+      <MapEventsListener />
 
-      <MapQueryParamsListener/>
+      <MapQueryParamsListener />
 
-      <SearchEventsListener/>
+      <SearchEventsListener />
 
-      <div id="map-bottom-right">
-        <AddEntryButton/>
+      <MapCustomClassZoomControl createClass={createClass} setCreateClass={setCreateClass}/>
 
-        <LocateMe/>
-      </div>
+      <MapShareModal isModalVisible={isModalVisibleEmbed} setIsModalVisible={setIsModalVisibleEmbed} mode={MapModalMode.EMBED} />
+
+      <MapShareModal isModalVisible={isModalVisibleSubscribe} setIsModalVisible={setIsModalVisibleSubscribe} mode={MapModalMode.SUBSCRIPTION} />
 
       <div id="map-top-right">
-        <BurgerMenu/>
+        <BurgerMenu />
       </div>
 
+      <div className={'map-bottom-right'}>
+          <AddEntryButton />
+          <LocateMe />
+      </div>
 
-      <ZoomControl position="bottomright"/>
+      <div id="map-bottom-share">
+        <ShareEntryButton showButton={showButtons} openHandler={setShowButtons}
+                          embedHandler={() => setIsModalVisibleEmbed(true)}
+                          subscribeHandler={() => {setIsModalVisibleSubscribe(true)}}/>
+      </div>
+
+      <ZoomControl position={'verticalcenterright'} />
 
       <TileLayer
         attribution='&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
